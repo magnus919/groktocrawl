@@ -2,6 +2,25 @@
 
 All notable changes to GroktoCrawl are documented in this file.
 
+## [0.12.0](https://github.com/groktopus/groktocrawl/compare/v0.11.0...v0.12.0) (2026-07-04)
+
+
+### Features
+
+* wire up Deep Research button in web portal ([58e7d7f](https://github.com/groktopus/groktocrawl/commit/58e7d7f972b58d20d28ca22be65f15b6565cd356))
+* wire up Deep Research button in web portal ([58e7d7f](https://github.com/groktopus/groktocrawl/commit/58e7d7f972b58d20d28ca22be65f15b6565cd356))
+* wire up Deep Research button in web portal ([29d849f](https://github.com/groktopus/groktocrawl/commit/29d849f4cbdccc742c8bff37f9773572508f4dfa))
+
+
+### Bug Fixes
+
+* address droid review — sticky mode, CSS selector, phase indicator ([8b8c6b6](https://github.com/groktopus/groktocrawl/commit/8b8c6b6c8c174e1fe81c73a58d3c73a506735293))
+* force browser tier when --format images requested so raw_html is available ([47f9bfb](https://github.com/groktopus/groktocrawl/commit/47f9bfb76bef9d8e2dfb209b5825363448ca0ed5)), closes [#378](https://github.com/groktopus/groktocrawl/issues/378)
+* force browser tier when --format images requested so raw_html is available ([#380](https://github.com/groktopus/groktocrawl/issues/380)) ([eeab12a](https://github.com/groktopus/groktocrawl/commit/eeab12a373685cb47096c06484cbd0ddf06d3ae9))
+* guard against empty choices array in LLM SSE stream ([#385](https://github.com/groktopus/groktocrawl/issues/385)) ([9884bc8](https://github.com/groktopus/groktocrawl/commit/9884bc8cffec62a5b954dd3f6d5cf3f64fb76dbb))
+* structural fallback in html_to_markdown for SPA-heavy sites ([70bf93c](https://github.com/groktopus/groktocrawl/commit/70bf93c644d58cdd001c5e144dcb4a706d369dfe))
+* structural fallback in html_to_markdown for SPA-heavy sites ([938ff5b](https://github.com/groktopus/groktocrawl/commit/938ff5b99d10ac45c901112daebb08b6f2404175)), closes [#361](https://github.com/groktopus/groktocrawl/issues/361)
+
 ## [Unreleased]
 
 ## [0.11.0](https://github.com/groktopus/groktocrawl/compare/v0.10.1...v0.11.0) (2026-06-29)
