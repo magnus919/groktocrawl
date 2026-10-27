@@ -32,7 +32,7 @@ groktocrawl/
 ├── scraper-svc/        # URL → markdown service
 │   └── scraper/
 │       ├── app.py      # FastAPI, single /scrape endpoint
-│       ├── fetch.py    # Three-tier fetch strategy (+ adapter dispatch)
+│       ├── fetch.py    # Multi-tier fetch/recovery orchestration (+ adapters)
 │       ├── extract.py  # HTML → markdown conversion + content quality gates (ADR-0016)
 │       └── adapters/   # Site-specific content handlers (auto-registered)
 ├── search-svc/         # Search fixture for local testing
@@ -51,20 +51,31 @@ Architecture Decision Records (ADRs) live in `docs/adr/` and capture the context
 
 Jobs are processed with `asyncio.create_task()` inside the API process. This avoids needing a separate worker container. For production deployments with high throughput, restore the RQ queue and add a worker container.
 
-### Three-tier smart scraper
+### Multi-tier smart scraper
 
-Tier 1: Check `/llms.txt` at the site root (one GET, whole site in markdown)
-Tier 2: Request with `Accept: text/markdown` header (per-page markdown)
-Tier 3: Playwright render + readability extraction
+Treat `scraper-svc/scraper/fetch.py:smart_scrape()` as the current orchestration
+source. Adapters run before the normal pipeline; cache, binary-content handling,
+quality gates and politeness also affect dispatch. The normal path includes
+llms.txt, content negotiation, Playwright, FlareSolverr and LLM-assisted recovery,
+with a conditional Substack browser-service fallback and best-effort outcomes.
+`force_browser` takes a different path. This is broader than the original
+three-tier description; do not assume every URL executes every stage.
 
-**Adapters run before tier 1.** When a URL matches a registered adapter, the adapter handles extraction with its own optimized fallback chain. If the adapter fails, the standard tier pipeline runs as normal. See `scraper-svc/scraper/adapters/base.py` for the adapter framework and `scraper-svc/scraper/adapters/` for available adapters.
+Read [ADR-0001](docs/adr/0001-adapter-registry-pre-pipeline-hook.md),
+[ADR-0010](docs/adr/0010-five-tier-scraper-with-llm-recovery.md),
+[ADR-0016](docs/adr/0016-extraction-quality-gates.md) and
+[ADR-0036](docs/adr/0036-split-scraper-fetch-modules.md), checking their statuses
+and current code. Available handlers live in `scraper-svc/scraper/adapters/`;
+avoid relying on a fixed adapter count.
 
-**Current adapter categories (22 total):**
-- **File/structured:** gutenberg (Project Gutenberg books as chapter-structured markdown), shopify (bypasses UCP content-negotiation trap on Shopify blog/content pages), youtube, bluesky, substack
-- **Code:** github (file/repo), github-social (issues/PRs/discussions/releases)
-- **Vulnerability/CVE:** nvd (NVD API, enriched), cveorg (MITRE CVE Program, authoritative)
-- **Security/threat intelligence:** abuseipdb, censys, crtsh, exploitdb, hibp, mitreattack, otx, shodan, virustotal, vulncheck
-- **Shared fallback:** `_helpers.py` provides `scrape_page()` for readability-lxml extraction, used by all security adapters
+### Research-loop changes
+
+Use the shared [Harness Engineering procedure](https://github.com/magnus919/agent-skills/blob/main/harness-engineering/references/verification-and-improvement.md)
+and [Agent Evals and Observability skill](https://github.com/magnus919/agent-skills/blob/main/agent-evals-and-observability/SKILL.md).
+For local installation, load their `SKILL.md` files from the installed skill root.
+Apply the repository-specific [ADR-0040 evaluation contract](docs/adr/0040-bound-research-loop-evaluation.md)
+for research-loop proposals, probes, composition and promotion. Its proposed
+status does not authorize runtime changes, experiments, release or deployment.
 
 ### LLM-agnostic
 
@@ -167,10 +178,11 @@ See `.env.sample` for all configurable variables. The `.env` file is loaded by `
 
 ## graphify
 
-This project has a graphify knowledge graph at graphify-out/.
+A local graphify knowledge graph may be available at graphify-out/; it is not
+guaranteed to exist in a fresh checkout.
 
 Rules:
-- Before answering architecture or codebase questions, read graphify-out/GRAPH_REPORT.md for god nodes and community structure
+- If available, read graphify-out/GRAPH_REPORT.md for architecture context. If absent, state that limitation and inspect current source and ADRs; do not assert that the report was read.
 - If graphify-out/wiki/index.md exists, navigate it instead of reading raw files
 - For cross-module "how does X relate to Y" questions, prefer `graphify query "<question>"`, `graphify path "<A>" "<B>"`, or `graphify explain "<concept>"` over grep — these traverse the graph's EXTRACTED + INFERRED edges instead of scanning files
 - After modifying code files in this session, run `graphify update .` to keep the graph current (AST-only, no API cost)
